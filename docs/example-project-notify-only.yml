@@ -1,0 +1,20 @@
+# Variant for projects that build the .pkg.tar.zst themselves and already
+# attach it to the release (with goreleaser, a custom script, ...).
+# All they do here is tell the pacman repository to go fetch it.
+
+name: Notify pacman
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.PACMAN_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/illegalstudio/pacman/dispatches \
+            -f event_type=publish \
+            -f "client_payload[repo]=${{ github.repository }}"

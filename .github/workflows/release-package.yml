@@ -1,0 +1,65 @@
+name: Build & publish Arch package
+
+# Reusable workflow: project repos call it with `uses:`.
+# It builds the project's PKGBUILD, attaches the .pkg.tar.zst to the release and
+# notifies illegalstudio/pacman, which updates the database and GitHub Pages.
+#
+# See docs/example-project.yml for how to call it.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag to attach the package to"
+        required: true
+        type: string
+      pkgbuild-dir:
+        description: "Directory containing the PKGBUILD"
+        required: false
+        type: string
+        default: "."
+      pacman-repo:
+        description: "Pacman repository to update"
+        required: false
+        type: string
+        default: "illegalstudio/pacman"
+    secrets:
+      PACMAN_DISPATCH_TOKEN:
+        description: "PAT with contents:write on the pacman repository"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    permissions:
+      contents: write
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git github-cli sudo
+
+      - uses: actions/checkout@v4
+
+      - name: Build the package
+        working-directory: ${{ inputs.pkgbuild-dir }}
+        run: |
+          # makepkg refuses to run as root
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          sudo -u builder makepkg --syncdeps --noconfirm --cleanbuild
+
+      - name: Attach the package to the release
+        working-directory: ${{ inputs.pkgbuild-dir }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          gh release upload "${{ inputs.tag }}" *.pkg.tar.zst --clobber
+
+      - name: Notify the pacman repository
+        env:
+          GH_TOKEN: ${{ secrets.PACMAN_DISPATCH_TOKEN }}
+        run: |
+          gh api "repos/${{ inputs.pacman-repo }}/dispatches" \
+            -f event_type=publish \
+            -f "client_payload[repo]=${{ github.repository }}"

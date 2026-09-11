@@ -1,0 +1,79 @@
+name: Sync repository
+
+on:
+  # sent by the project repos when they publish a release
+  repository_dispatch:
+    types: [publish]
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "owner/repo to sync (empty = everything in sources.json)"
+        required: false
+        default: ""
+  # safety net: if a dispatch gets lost, the nightly run catches up
+  schedule:
+    - cron: "17 4 * * *"
+
+concurrency:
+  group: pacman-repo
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    container: archlinux:base
+    outputs:
+      changed: ${{ steps.sync.outputs.changed }}
+    steps:
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed git jq github-cli libarchive
+
+      - uses: actions/checkout@v4
+
+      - name: Sync
+        id: sync
+        env:
+          # a PAT is only needed if some source repo is private
+          GH_TOKEN: ${{ secrets.SOURCES_TOKEN || github.token }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          ./scripts/sync.sh "${{ github.event.client_payload.repo || inputs.repo }}"
+
+      - name: Commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "repo: sync${{ github.event.client_payload.repo && format(' {0}', github.event.client_payload.repo) || '' }}"
+            git push
+          fi
+
+      - name: Build the site
+        run: |
+          mkdir -p _site
+          cp -r x86_64 _site/
+          cp index.html _site/
+          cp packages.json _site/ 2>/dev/null || true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: sync
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

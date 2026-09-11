@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>illegalstudio · pacman repository</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161922; --line: #242938;
+    --fg: #e6e8ee; --muted: #8b93a7; --accent: #7aa2f7;
+    --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 4rem 1.5rem; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 48rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; letter-spacing: -.02em; }
+  h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .12em;
+       color: var(--muted); margin: 3rem 0 1rem; font-weight: 600; }
+  p.lead { color: var(--muted); margin: 0 0 2rem; }
+  pre {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.1rem; overflow-x: auto; font-family: var(--mono); font-size: .85rem;
+  }
+  code { font-family: var(--mono); }
+  ul.pkgs { list-style: none; padding: 0; margin: 0; }
+  ul.pkgs li {
+    border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+    padding: .9rem 1.1rem; margin-bottom: .6rem;
+  }
+  .row { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .name { font-family: var(--mono); font-weight: 600; }
+  .ver { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+  .desc { color: var(--muted); font-size: .9rem; margin-top: .15rem; }
+  a { color: var(--accent); }
+  footer { margin-top: 4rem; color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>illegalstudio · pacman repository</h1>
+  <p class="lead">Arch Linux binary repository holding illegalstudio's packages.</p>
+
+  <h2>Install</h2>
+  <p>Add this at the bottom of <code>/etc/pacman.conf</code>:</p>
+<pre>[illegalstudio]
+SigLevel = Optional TrustAll
+Server = https://illegalstudio.github.io/pacman/$arch</pre>
+  <p>Then:</p>
+<pre>sudo pacman -Sy
+sudo pacman -S &lt;package&gt;</pre>
+
+  <h2>Packages</h2>
+  <ul class="pkgs" id="pkgs"><li>Loading…</li></ul>
+
+  <footer id="footer"></footer>
+</main>
+<script>
+fetch("packages.json", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(data => {
+    const ul = document.getElementById("pkgs");
+    const pkgs = (data.packages || []).sort((a, b) => a.name.localeCompare(b.name));
+    if (!pkgs.length) { ul.innerHTML = "<li>No packages published yet.</li>"; return; }
+    ul.innerHTML = "";
+    for (const p of pkgs) {
+      const li = document.createElement("li");
+      const row = document.createElement("div");
+      row.className = "row";
+      const name = document.createElement("span");
+      name.className = "name"; name.textContent = p.name;
+      const ver = document.createElement("span");
+      ver.className = "ver"; ver.textContent = p.version;
+      row.append(name, ver);
+      if (p.url) {
+        const a = document.createElement("a");
+        a.href = p.url; a.textContent = "source"; a.style.fontSize = ".8rem";
+        a.rel = "noopener"; row.append(a);
+      }
+      li.append(row);
+      if (p.desc) {
+        const d = document.createElement("div");
+        d.className = "desc"; d.textContent = p.desc;
+        li.append(d);
+      }
+      ul.append(li);
+    }
+    if (data.updated) {
+      document.getElementById("footer").textContent =
+        "Last updated: " + new Date(data.updated).toLocaleString();
+    }
+  })
+  .catch(() => {
+    document.getElementById("pkgs").innerHTML = "<li>No packages published yet.</li>";
+  });
+</script>
+</body>
+</html>

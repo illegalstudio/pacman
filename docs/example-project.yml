@@ -1,0 +1,29 @@
+# Copy this file to .github/workflows/pacman.yml in the project repo.
+#
+# Requirements on the project side:
+#   - a PKGBUILD (in the root or in a subdirectory)
+#   - a PACMAN_DISPATCH_TOKEN secret (an organization secret is best): a
+#     fine-grained PAT with "Contents: read and write" scoped to the
+#     illegalstudio/pacman repository only
+
+name: Publish to pacman
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to (re)publish"
+        required: true
+
+jobs:
+  publish:
+    uses: illegalstudio/pacman/.github/workflows/release-package.yml@main
+    permissions:
+      contents: write
+    with:
+      tag: ${{ github.event.release.tag_name || inputs.tag }}
+      # pkgbuild-dir: packaging/arch
+    secrets:
+      PACMAN_DISPATCH_TOKEN: ${{ secrets.PACMAN_DISPATCH_TOKEN }}
