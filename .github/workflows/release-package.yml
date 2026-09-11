@@ -18,6 +18,16 @@ on:
         required: false
         type: string
         default: "."
+      build-aarch64:
+        description: "Also build on an ARM64 runner (only for arch-specific packages; an arch=any package needs a single build)"
+        required: false
+        type: boolean
+        default: false
+      aarch64-image:
+        description: "Container image used for the ARM64 build (Arch Linux ARM, community-maintained)"
+        required: false
+        type: string
+        default: "menci/archlinuxarm:base-devel"
       pacman-repo:
         description: "Pacman repository to update"
         required: false
@@ -29,9 +39,34 @@ on:
         required: true
 
 jobs:
-  build:
+  # The matrix has to be data, not an expression: an ARM runner is only added
+  # when the caller asks for it.
+  matrix:
     runs-on: ubuntu-latest
-    container: archlinux:base-devel
+    outputs:
+      include: ${{ steps.set.outputs.include }}
+    steps:
+      - id: set
+        env:
+          ARM: ${{ inputs.build-aarch64 }}
+          ARM_IMAGE: ${{ inputs.aarch64-image }}
+        run: |
+          x86='{"runner":"ubuntu-latest","image":"archlinux:base-devel"}'
+          if [ "$ARM" = "true" ]; then
+            arm="{\"runner\":\"ubuntu-24.04-arm\",\"image\":\"$ARM_IMAGE\"}"
+            echo "include=[$x86,$arm]" >> "$GITHUB_OUTPUT"
+          else
+            echo "include=[$x86]" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.image }}
     permissions:
       contents: write
     steps:
@@ -56,6 +91,10 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           gh release upload "${{ inputs.tag }}" *.pkg.tar.zst --clobber
 
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify the pacman repository
         env:
           GH_TOKEN: ${{ secrets.PACMAN_DISPATCH_TOKEN }}

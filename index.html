@@ -33,6 +33,8 @@
   .row { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
   .name { font-family: var(--mono); font-weight: 600; }
   .ver { font-family: var(--mono); font-size: .8rem; color: var(--accent); }
+  .arch { font-family: var(--mono); font-size: .7rem; color: var(--muted);
+          border: 1px solid var(--line); border-radius: 999px; padding: .05rem .5rem; }
   .desc { color: var(--muted); font-size: .9rem; margin-top: .15rem; }
   a { color: var(--accent); }
   footer { margin-top: 4rem; color: var(--muted); font-size: .8rem; }
@@ -48,6 +50,7 @@
 <pre>[illegalstudio]
 SigLevel = Optional TrustAll
 Server = https://illegalstudio.github.io/pacman/$arch</pre>
+  <p style="color:var(--muted);font-size:.9rem">Serving x86_64 and aarch64.</p>
   <p>Then:</p>
 <pre>sudo pacman -Sy
 sudo pacman -S &lt;package&gt;</pre>
@@ -74,6 +77,11 @@ fetch("packages.json", { cache: "no-store" })
       const ver = document.createElement("span");
       ver.className = "ver"; ver.textContent = p.version;
       row.append(name, ver);
+      if (p.arch) {
+        const a = document.createElement("span");
+        a.className = "arch"; a.textContent = p.arch;
+        row.append(a);
+      }
       if (p.url) {
         const a = document.createElement("a");
         a.href = p.url; a.textContent = "source"; a.style.fontSize = ".8rem";

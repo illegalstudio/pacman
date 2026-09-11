@@ -25,5 +25,8 @@ jobs:
     with:
       tag: ${{ github.event.release.tag_name || inputs.tag }}
       # pkgbuild-dir: packaging/arch
+      # Only for arch-specific packages: an arch=(any) PKGBUILD needs a single
+      # build, and the repository serves it to every architecture.
+      # build-aarch64: true
     secrets:
       PACMAN_DISPATCH_TOKEN: ${{ secrets.PACMAN_DISPATCH_TOKEN }}

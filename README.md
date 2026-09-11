@@ -44,6 +44,8 @@ SigLevel = Optional TrustAll
 Server = https://illegalstudio.github.io/pacman/$arch
 ```
 
+`$arch` is expanded by pacman: the repository serves **x86_64** and **aarch64**.
+
 Then refresh the package lists and install what you need:
 
 ```bash

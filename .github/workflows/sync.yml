@@ -57,7 +57,9 @@ jobs:
       - name: Build the site
         run: |
           mkdir -p _site
-          cp -r x86_64 _site/
+          for arch in x86_64 aarch64; do
+            if [ -d "$arch" ]; then cp -r "$arch" _site/; fi
+          done
           cp index.html _site/
           cp packages.json _site/ 2>/dev/null || true
 

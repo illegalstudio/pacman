@@ -9,9 +9,9 @@
 set -euo pipefail
 
 REPO_NAME="${REPO_NAME:-illegalstudio}"
-ARCH="${ARCH:-x86_64}"
-DB="$ARCH/$REPO_NAME.db.tar.gz"
-FILES_DB="$ARCH/$REPO_NAME.files.tar.gz"
+# One directory and one database per architecture. Packages built with
+# `arch=(any)` are copied into every one of them.
+read -r -a ARCHES <<< "${ARCHES:-x86_64 aarch64}"
 
 only_repo="${1:-}"
 
@@ -27,13 +27,23 @@ else
   mapfile -t sources < <(jq -r '.sources[]' sources.json)
 fi
 
-mkdir -p "$ARCH"
+for arch in "${ARCHES[@]}"; do mkdir -p "$arch"; done
 changed=0
 
-# Read pkgname from the .PKGINFO inside the package, never from the file name:
-# names contain dashes and parsing them would be ambiguous.
+# Read fields from the .PKGINFO inside the package. pkgname in particular must
+# never be parsed out of the file name: names contain dashes and parsing them
+# would be ambiguous.
 pkginfo_field() {
   bsdtar -xOqf "$1" .PKGINFO 2>/dev/null | awk -F ' = ' -v k="$2" '$1==k {print $2; exit}'
+}
+
+# Directories a package of the given architecture belongs in.
+target_dirs() {
+  if [[ $1 == any ]]; then
+    printf '%s\n' "${ARCHES[@]}"
+  elif [[ " ${ARCHES[*]} " == *" $1 "* ]]; then
+    printf '%s\n' "$1"
+  fi
 }
 
 for src in "${sources[@]:-}"; do
@@ -56,7 +66,22 @@ for src in "${sources[@]:-}"; do
   fi
 
   for asset in "${assets[@]}"; do
-    if [[ -f "$ARCH/$asset" ]]; then
+    # The architecture IS unambiguous in the file name (last field before the
+    # extension), unlike pkgname. Good enough to skip a download.
+    asset_arch="${asset%.pkg.tar.*}"
+    asset_arch="${asset_arch##*-}"
+
+    mapfile -t dirs < <(target_dirs "$asset_arch")
+    if [[ ${#dirs[@]} -eq 0 ]]; then
+      echo "    $asset: architecture $asset_arch not served here, skipping"
+      continue
+    fi
+
+    missing=0
+    for dir in "${dirs[@]}"; do
+      [[ -f "$dir/$asset" ]] || missing=1
+    done
+    if [[ $missing -eq 0 ]]; then
       echo "    $asset already present"
       continue
     fi
@@ -71,38 +96,68 @@ for src in "${sources[@]:-}"; do
       continue
     fi
 
-    # drop previous versions of the same package
-    for old in "$ARCH"/*.pkg.tar.*; do
-      [[ -e $old ]] || continue
-      [[ $old == *.sig ]] && continue
-      if [[ "$(pkginfo_field "$old" pkgname)" == "$pkgname" ]]; then
-        echo "    removing previous version $(basename "$old")"
-        rm -f "$old" "$old.sig"
+    # The .PKGINFO is authoritative over the file name
+    pkgarch=$(pkginfo_field "tmp/$asset" arch)
+    if [[ -n $pkgarch && $pkgarch != "$asset_arch" ]]; then
+      mapfile -t dirs < <(target_dirs "$pkgarch")
+      if [[ ${#dirs[@]} -eq 0 ]]; then
+        echo "    !! $asset declares arch $pkgarch, not served here, skipping"
+        continue
       fi
-    done
+    fi
 
-    mv "tmp/$asset" "$ARCH/$asset"
-    repo-add -q -R "$DB" "$ARCH/$asset"
+    for dir in "${dirs[@]}"; do
+      # drop previous versions of the same package
+      for old in "$dir"/*.pkg.tar.*; do
+        [[ -e $old ]] || continue
+        [[ $old == *.sig ]] && continue
+        if [[ "$(pkginfo_field "$old" pkgname)" == "$pkgname" ]]; then
+          echo "    $dir: removing previous version $(basename "$old")"
+          rm -f "$old" "$old.sig"
+        fi
+      done
+
+      cp "tmp/$asset" "$dir/$asset"
+      repo-add -q -R "$dir/$REPO_NAME.db.tar.gz" "$dir/$asset"
+      echo "    $dir: added $asset"
+    done
     changed=1
   done
 done
 
 rm -rf tmp
 
-if [[ ! -f $DB ]]; then
-  echo "No packages in the repository."
-  exit 0
-fi
-
-# GitHub Pages does not follow symlinks: these have to be real files
-for ext in db files; do
-  target="$ARCH/$REPO_NAME.$ext.tar.gz"
-  [[ -f $target ]] || continue
-  rm -f "$ARCH/$REPO_NAME.$ext"
-  cp -f "$target" "$ARCH/$REPO_NAME.$ext"
+# GitHub Pages does not follow symlinks, and repo-add creates the .db/.files
+# entry points as symlinks: replace them with real copies.
+for arch in "${ARCHES[@]}"; do
+  # repo-add keeps a .old backup of the previous database: not something to
+  # commit or to serve
+  rm -f "$arch"/*.old
+  for ext in db files; do
+    target="$arch/$REPO_NAME.$ext.tar.gz"
+    [[ -f $target ]] || continue
+    rm -f "$arch/$REPO_NAME.$ext"
+    cp -f "$target" "$arch/$REPO_NAME.$ext"
+  done
 done
 
-# --- human-readable index for the web page ----------------------------------
+# --- collect the published packages, once per package -----------------------
+# An `any` package lives in every arch directory under the same file name, so
+# dedupe on that.
+declare -A seen=()
+pkg_list=()
+for arch in "${ARCHES[@]}"; do
+  for pkg in "$arch"/*.pkg.tar.*; do
+    [[ -e $pkg ]] || continue
+    [[ $pkg == *.sig ]] && continue
+    base=$(basename "$pkg")
+    [[ -n ${seen[$base]:-} ]] && continue
+    seen[$base]=1
+    pkg_list+=("$pkg")
+  done
+done
+
+# --- machine-readable index for the web page --------------------------------
 # Regenerated only when something changed, to keep git quiet on no-op runs.
 if [[ $changed -eq 1 || ! -f packages.json ]]; then
 {
@@ -111,14 +166,13 @@ if [[ $changed -eq 1 || ! -f packages.json ]]; then
   echo '  "updated": "'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'",'
   echo '  "packages": ['
   first=1
-  for pkg in "$ARCH"/*.pkg.tar.*; do
-    [[ -e $pkg ]] || continue
-    [[ $pkg == *.sig ]] && continue
+  for pkg in ${pkg_list[@]+"${pkg_list[@]}"}; do
     [[ $first -eq 1 ]] || echo ','
     first=0
-    printf '    {"name": %s, "version": %s, "desc": %s, "url": %s, "file": %s, "size": %s}' \
+    printf '    {"name": %s, "version": %s, "arch": %s, "desc": %s, "url": %s, "file": %s, "size": %s}' \
       "$(jq -Rn --arg v "$(pkginfo_field "$pkg" pkgname)" '$v')" \
       "$(jq -Rn --arg v "$(pkginfo_field "$pkg" pkgver)"  '$v')" \
+      "$(jq -Rn --arg v "$(pkginfo_field "$pkg" arch)"    '$v')" \
       "$(jq -Rn --arg v "$(pkginfo_field "$pkg" pkgdesc)" '$v')" \
       "$(jq -Rn --arg v "$(pkginfo_field "$pkg" url)"     '$v')" \
       "$(jq -Rn --arg v "$(basename "$pkg")"              '$v')" \
@@ -133,30 +187,22 @@ fi
 # --- packages table in the README -------------------------------------------
 # Deterministic output, so a no-op run leaves git clean.
 rows=$(mktemp)
-count=0
-for pkg in "$ARCH"/*.pkg.tar.*; do
-  [[ -e $pkg ]] || continue
-  [[ $pkg == *.sig ]] && continue
-  count=$((count + 1))
-done
-
 {
-  if [[ $count -eq 0 ]]; then
+  if [[ ${#pkg_list[@]} -eq 0 ]]; then
     echo '_No packages published yet._'
   else
-    echo '| Package | Version | Description |'
-    echo '| --- | --- | --- |'
-    for pkg in "$ARCH"/*.pkg.tar.*; do
-      [[ -e $pkg ]] || continue
-      [[ $pkg == *.sig ]] && continue
+    echo '| Package | Version | Architecture | Description |'
+    echo '| --- | --- | --- | --- |'
+    for pkg in "${pkg_list[@]}"; do
       name=$(pkginfo_field "$pkg" pkgname)
       ver=$(pkginfo_field "$pkg" pkgver)
+      arch=$(pkginfo_field "$pkg" arch)
       desc=$(pkginfo_field "$pkg" pkgdesc | sed 's/|/\\|/g')
       url=$(pkginfo_field "$pkg" url)
       if [[ -n $url ]]; then
-        echo "| [\`$name\`]($url) | \`$ver\` | $desc |"
+        echo "| [\`$name\`]($url) | \`$ver\` | \`$arch\` | $desc |"
       else
-        echo "| \`$name\` | \`$ver\` | $desc |"
+        echo "| \`$name\` | \`$ver\` | \`$arch\` | $desc |"
       fi
     done | sort
   fi
