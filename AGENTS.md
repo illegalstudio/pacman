@@ -43,12 +43,17 @@ is lost, the repo catches up on its own.
 | `x86_64/` | Packages and database. **Generated**, see below. |
 | `packages.json` | Machine-readable index consumed by `index.html`. **Generated.** |
 | `index.html` | Landing page: install instructions plus package list. |
+| `README.md` | **User-facing only**: what the repo is and how to install from it. The package table between the `<!-- packages:start -->` / `<!-- packages:end -->` markers is **generated** by `sync.sh`. |
 | `docs/example-project*.yml` | Snippets to copy into the project repos. |
 
 ## Invariants — do not break these
 
-- **`x86_64/` and `packages.json` are generated.** Do not edit them by hand
-  except to remove a package (see README). Changes belong in `sync.sh`.
+- **`x86_64/`, `packages.json` and the README package table are generated.** Do
+  not edit them by hand except to remove a package (see *Maintenance* below).
+  Changes belong in `sync.sh`.
+- **The README is for users, not maintainers.** It only covers what the repo is
+  and how to install from it. Internals, onboarding and maintenance live here in
+  `AGENTS.md`; do not move them back into the README.
 - **The database is named `illegalstudio`** and must keep matching the section
   name in users' `pacman.conf`. Renaming it breaks every existing install.
 - **`illegalstudio.db` and `.files` must be real files, not symlinks.**
@@ -70,6 +75,34 @@ is lost, the repo catches up on its own.
 - **No GPG signing**, by choice: users rely on `SigLevel = Optional TrustAll`.
   If signing is ever added, the README must be updated and users have to import
   the key.
+
+## Adding a project
+
+1. The project needs a `PKGBUILD`.
+2. It needs a `PACMAN_DISPATCH_TOKEN` secret (an organization secret is best, so
+   every project inherits it): a fine-grained PAT with *Contents: read and
+   write* scoped to `illegalstudio/pacman`.
+3. Copy `docs/example-project.yml` to `.github/workflows/pacman.yml` in the
+   project repo. If the project already builds and attaches the package itself,
+   copy `docs/example-project-notify-only.yml` instead.
+
+The package shows up within a minute of the next release, and the source repo
+adds itself to `sources.json` on its first publish.
+
+## Maintenance
+
+```bash
+# resync everything (or: Actions → Sync repository → Run workflow)
+gh workflow run sync.yml --repo illegalstudio/pacman
+
+# resync a single project
+gh workflow run sync.yml --repo illegalstudio/pacman -f repo=illegalstudio/ggg
+
+# remove a package: drop its repo from sources.json, then
+repo-remove x86_64/illegalstudio.db.tar.gz <pkgname>
+rm x86_64/<pkgname>-*.pkg.tar.zst
+# and rerun sync.sh so packages.json and the README table follow
+```
 
 ## Secrets and permissions
 

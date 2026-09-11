@@ -130,6 +130,45 @@ if [[ $changed -eq 1 || ! -f packages.json ]]; then
 } > packages.json
 fi
 
+# --- packages table in the README -------------------------------------------
+# Deterministic output, so a no-op run leaves git clean.
+rows=$(mktemp)
+count=0
+for pkg in "$ARCH"/*.pkg.tar.*; do
+  [[ -e $pkg ]] || continue
+  [[ $pkg == *.sig ]] && continue
+  count=$((count + 1))
+done
+
+{
+  if [[ $count -eq 0 ]]; then
+    echo '_No packages published yet._'
+  else
+    echo '| Package | Version | Description |'
+    echo '| --- | --- | --- |'
+    for pkg in "$ARCH"/*.pkg.tar.*; do
+      [[ -e $pkg ]] || continue
+      [[ $pkg == *.sig ]] && continue
+      name=$(pkginfo_field "$pkg" pkgname)
+      ver=$(pkginfo_field "$pkg" pkgver)
+      desc=$(pkginfo_field "$pkg" pkgdesc | sed 's/|/\\|/g')
+      url=$(pkginfo_field "$pkg" url)
+      if [[ -n $url ]]; then
+        echo "| [\`$name\`]($url) | \`$ver\` | $desc |"
+      else
+        echo "| \`$name\` | \`$ver\` | $desc |"
+      fi
+    done | sort
+  fi
+} > "$rows"
+
+awk -v f="$rows" '
+  index($0, "<!-- packages:start -->") { print; while ((getline l < f) > 0) print l; s = 1; next }
+  index($0, "<!-- packages:end -->")   { s = 0 }
+  !s { print }
+' README.md > README.md.tmp && mv README.md.tmp README.md
+rm -f "$rows"
+
 echo "changed=$changed"
 [[ -n ${GITHUB_OUTPUT:-} ]] && echo "changed=$changed" >> "$GITHUB_OUTPUT"
 exit 0
