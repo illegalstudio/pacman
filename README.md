@@ -62,5 +62,8 @@ Updates arrive like any other package, with `pacman -Syu`.
 ## Packages
 
 <!-- packages:start -->
-_No packages published yet._
+| Package | Version | Architecture | Description |
+| --- | --- | --- | --- |
+| [`reelmux`](https://opensource.nahi.me) | `0.1.1-1` | `aarch64` | Edit MP4 tracks, subtitles, metadata and artwork on Linux |
+| [`reelmux`](https://opensource.nahi.me) | `0.1.1-1` | `x86_64` | Edit MP4 tracks, subtitles, metadata and artwork on Linux |
 <!-- packages:end -->

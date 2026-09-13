@@ -1,7 +1,8 @@
 {
   "repo": "illegalstudio",
-  "updated": "2026-09-12T08:38:30Z",
+  "updated": "2026-09-13T12:47:04Z",
   "packages": [
-
+    {"name": "reelmux", "version": "0.1.1-1", "arch": "x86_64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-x86_64.pkg.tar.zst", "size": 2116841},
+    {"name": "reelmux", "version": "0.1.1-1", "arch": "aarch64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-aarch64.pkg.tar.zst", "size": 2029397}
   ]
 }
