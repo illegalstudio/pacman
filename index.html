@@ -51,9 +51,8 @@
 SigLevel = Optional TrustAll
 Server = https://illegalstudio.github.io/pacman/$arch</pre>
   <p style="color:var(--muted);font-size:.9rem">Serving x86_64 and aarch64.</p>
-  <p>Then:</p>
-<pre>sudo pacman -Sy
-sudo pacman -S &lt;package&gt;</pre>
+  <p>Then install with a full upgrade, never a bare <code>-Sy</code>:</p>
+<pre>sudo pacman -Syu &lt;package&gt;</pre>
 
   <h2>Packages</h2>
   <ul class="pkgs" id="pkgs"><li>Loading…</li></ul>

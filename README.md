@@ -46,11 +46,12 @@ Server = https://illegalstudio.github.io/pacman/$arch
 
 `$arch` is expanded by pacman: the repository serves **x86_64** and **aarch64**.
 
-Then refresh the package lists and install what you need:
+Then install what you need. `-Syu` refreshes the databases and upgrades the
+system in the same transaction; a bare `-Sy` would leave Arch in an unsupported
+partial-upgrade state.
 
 ```bash
-sudo pacman -Sy
-sudo pacman -S <package>
+sudo pacman -Syu <package>
 ```
 
 Updates arrive like any other package, with `pacman -Syu`.
