@@ -1,5 +1,6 @@
 {
   "sources": [
+    "illegalstudio/lazyagent",
     "illegalstudio/reelmux"
   ]
 }

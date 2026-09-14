@@ -1,8 +1,10 @@
 {
   "repo": "illegalstudio",
-  "updated": "2026-09-13T12:47:04Z",
+  "updated": "2026-09-14T16:23:11Z",
   "packages": [
+    {"name": "lazyagent", "version": "0.15.7-1", "arch": "x86_64", "desc": "Monitor all your coding agent sessions from the desktop or terminal", "url": "https://lazyagent.dev", "file": "lazyagent-0.15.7-1-x86_64.pkg.tar.zst", "size": 7215873},
     {"name": "reelmux", "version": "0.1.1-1", "arch": "x86_64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-x86_64.pkg.tar.zst", "size": 2116841},
+    {"name": "lazyagent", "version": "0.15.7-1", "arch": "aarch64", "desc": "Monitor all your coding agent sessions from the desktop or terminal", "url": "https://lazyagent.dev", "file": "lazyagent-0.15.7-1-aarch64.pkg.tar.zst", "size": 6613059},
     {"name": "reelmux", "version": "0.1.1-1", "arch": "aarch64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-aarch64.pkg.tar.zst", "size": 2029397}
   ]
 }
