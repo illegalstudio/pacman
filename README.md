@@ -65,8 +65,8 @@ Updates arrive like any other package, with `pacman -Syu`.
 <!-- packages:start -->
 | Package | Version | Architecture | Description |
 | --- | --- | --- | --- |
-| [`context`](https://github.com/illegalstudio/context) | `0.3.0-1` | `aarch64` | Deterministic, explainable context packs for coding tasks |
-| [`context`](https://github.com/illegalstudio/context) | `0.3.0-1` | `x86_64` | Deterministic, explainable context packs for coding tasks |
+| [`context`](https://github.com/illegalstudio/context) | `0.3.1-1` | `aarch64` | Deterministic, explainable context packs for coding tasks |
+| [`context`](https://github.com/illegalstudio/context) | `0.3.1-1` | `x86_64` | Deterministic, explainable context packs for coding tasks |
 | [`darkbox`](https://illegal.studio/en/products/darkbox) | `1.1.0-1` | `aarch64` | Offline inspection and verification of Darkbox project archives |
 | [`darkbox`](https://illegal.studio/en/products/darkbox) | `1.1.0-1` | `x86_64` | Offline inspection and verification of Darkbox project archives |
 | [`lazyagent`](https://lazyagent.dev) | `0.15.8-1` | `aarch64` | Monitor all your coding agent sessions from the desktop or terminal |
