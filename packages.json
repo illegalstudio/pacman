@@ -1,10 +1,12 @@
 {
   "repo": "illegalstudio",
-  "updated": "2026-10-14T15:40:40Z",
+  "updated": "2026-10-15T10:49:35Z",
   "packages": [
+    {"name": "context", "version": "0.3.0-1", "arch": "x86_64", "desc": "Deterministic, explainable context packs for coding tasks", "url": "https://github.com/illegalstudio/context", "file": "context-0.3.0-1-x86_64.pkg.tar.zst", "size": 3748745},
     {"name": "darkbox", "version": "1.1.0-1", "arch": "x86_64", "desc": "Offline inspection and verification of Darkbox project archives", "url": "https://illegal.studio/en/products/darkbox", "file": "darkbox-1.1.0-1-x86_64.pkg.tar.zst", "size": 3811063},
     {"name": "lazyagent", "version": "0.15.8-1", "arch": "x86_64", "desc": "Monitor all your coding agent sessions from the desktop or terminal", "url": "https://lazyagent.dev", "file": "lazyagent-0.15.8-1-x86_64.pkg.tar.zst", "size": 7190568},
     {"name": "reelmux", "version": "0.1.1-1", "arch": "x86_64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-x86_64.pkg.tar.zst", "size": 2116841},
+    {"name": "context", "version": "0.3.0-1", "arch": "aarch64", "desc": "Deterministic, explainable context packs for coding tasks", "url": "https://github.com/illegalstudio/context", "file": "context-0.3.0-1-aarch64.pkg.tar.zst", "size": 3600807},
     {"name": "darkbox", "version": "1.1.0-1", "arch": "aarch64", "desc": "Offline inspection and verification of Darkbox project archives", "url": "https://illegal.studio/en/products/darkbox", "file": "darkbox-1.1.0-1-aarch64.pkg.tar.zst", "size": 3596972},
     {"name": "lazyagent", "version": "0.15.8-1", "arch": "aarch64", "desc": "Monitor all your coding agent sessions from the desktop or terminal", "url": "https://lazyagent.dev", "file": "lazyagent-0.15.8-1-aarch64.pkg.tar.zst", "size": 6588000},
     {"name": "reelmux", "version": "0.1.1-1", "arch": "aarch64", "desc": "Edit MP4 tracks, subtitles, metadata and artwork on Linux", "url": "https://opensource.nahi.me", "file": "reelmux-0.1.1-1-aarch64.pkg.tar.zst", "size": 2029397}
