@@ -69,8 +69,8 @@ Updates arrive like any other package, with `pacman -Syu`.
 | [`context`](https://github.com/illegalstudio/context) | `0.3.1-1` | `x86_64` | Deterministic, explainable context packs for coding tasks |
 | [`darkbox`](https://illegal.studio/en/products/darkbox) | `1.1.0-1` | `aarch64` | Offline inspection and verification of Darkbox project archives |
 | [`darkbox`](https://illegal.studio/en/products/darkbox) | `1.1.0-1` | `x86_64` | Offline inspection and verification of Darkbox project archives |
-| [`lazyagent`](https://lazyagent.dev) | `0.15.8-1` | `aarch64` | Monitor all your coding agent sessions from the desktop or terminal |
-| [`lazyagent`](https://lazyagent.dev) | `0.15.8-1` | `x86_64` | Monitor all your coding agent sessions from the desktop or terminal |
+| [`lazyagent`](https://lazyagent.dev) | `0.15.9-1` | `aarch64` | Monitor all your coding agent sessions from the desktop or terminal |
+| [`lazyagent`](https://lazyagent.dev) | `0.15.9-1` | `x86_64` | Monitor all your coding agent sessions from the desktop or terminal |
 | [`reelmux`](https://opensource.nahi.me) | `0.1.1-1` | `aarch64` | Edit MP4 tracks, subtitles, metadata and artwork on Linux |
 | [`reelmux`](https://opensource.nahi.me) | `0.1.1-1` | `x86_64` | Edit MP4 tracks, subtitles, metadata and artwork on Linux |
 <!-- packages:end -->
