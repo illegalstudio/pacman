@@ -2,6 +2,7 @@
   "sources": [
     "illegalstudio/context",
     "illegalstudio/darkbox",
+    "illegalstudio/gleaner-releases",
     "illegalstudio/lazyagent",
     "illegalstudio/reelmux"
   ]
